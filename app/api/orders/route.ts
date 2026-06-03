@@ -1,37 +1,25 @@
-let orders: any[] = [];
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
+// GET all orders
 export async function GET() {
-  return Response.json(orders);
+  const orders = await prisma.order.findMany();
+  return NextResponse.json(orders);
 }
 
+// CREATE order (checkout)
 export async function POST(req: Request) {
-  try {
-    const body = await req.json();
+  const body = await req.json();
 
-    if (!body.items || !body.total) {
-      return Response.json(
-        { message: "Invalid order data" },
-        { status: 400 }
-      );
-    }
-
-    const newOrder = {
-      id: Date.now(),
+  const newOrder = await prisma.order.create({
+    data: {
       items: body.items,
-      total: Number(body.total),
-      date: new Date().toISOString(),
-    };
+      total: body.total,
+    },
+  });
 
-    orders.push(newOrder);
-
-    return Response.json({
-      message: "Order placed successfully",
-      order: newOrder,
-    });
-  } catch (error) {
-    return Response.json(
-      { message: "Server error while placing order" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({
+    message: "Order placed successfully",
+    order: newOrder,
+  });
 }
