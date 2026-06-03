@@ -5,19 +5,33 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  const newOrder = {
-    id: Date.now(),
-    items: body.items,
-    total: body.total,
-    date: new Date(),
-  };
+    if (!body.items || !body.total) {
+      return Response.json(
+        { message: "Invalid order data" },
+        { status: 400 }
+      );
+    }
 
-  orders.push(newOrder);
+    const newOrder = {
+      id: Date.now(),
+      items: body.items,
+      total: Number(body.total),
+      date: new Date().toISOString(),
+    };
 
-  return Response.json({
-    message: "Order placed successfully",
-    order: newOrder,
-  });
+    orders.push(newOrder);
+
+    return Response.json({
+      message: "Order placed successfully",
+      order: newOrder,
+    });
+  } catch (error) {
+    return Response.json(
+      { message: "Server error while placing order" },
+      { status: 500 }
+    );
+  }
 }
