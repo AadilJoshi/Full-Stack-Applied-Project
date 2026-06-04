@@ -13,11 +13,19 @@ type Product = {
   image: string;
 };
 
+type Order = {
+  id: number;
+  total: number;
+  date: string;
+  items: any[];
+};
+
 export default function AdminPage() {
   const { user } = useAuth();
   const router = useRouter();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -32,17 +40,24 @@ export default function AdminPage() {
     if (!user || user.role !== "admin") {
       router.push("/login");
     }
-  }, [user]);
+  }, [user, router]);
 
-  // 📦 LOAD PRODUCTS
-  const loadProducts = async () => {
-    const res = await fetch("/api/products");
-    const data = await res.json();
-    setProducts(data);
+  // 📦 LOAD PRODUCTS + ORDERS
+  const loadData = async () => {
+    const [productsRes, ordersRes] = await Promise.all([
+      fetch("/api/products"),
+      fetch("/api/orders"),
+    ]);
+
+    const productsData = await productsRes.json();
+    const ordersData = await ordersRes.json();
+
+    setProducts(productsData);
+    setOrders(ordersData);
   };
 
   useEffect(() => {
-    loadProducts();
+    loadData();
   }, []);
 
   // ➕ ADD PRODUCT
@@ -66,7 +81,7 @@ export default function AdminPage() {
       image: "",
     });
 
-    loadProducts();
+    loadData();
   };
 
   // ❌ DELETE PRODUCT
@@ -75,7 +90,7 @@ export default function AdminPage() {
       method: "DELETE",
     });
 
-    loadProducts();
+    loadData();
   };
 
   return (
@@ -179,6 +194,48 @@ export default function AdminPage() {
           </div>
         ))}
       </div>
+
+      {/* ORDERS SECTION */}
+      <hr style={{ margin: "40px 0" }} />
+
+      <h2>📜 Purchase Records</h2>
+
+      {orders.length === 0 ? (
+        <p>No orders yet.</p>
+      ) : (
+        orders.map((order) => (
+          <div
+            key={order.id}
+            style={{
+              border: "1px solid #ccc",
+              padding: "15px",
+              marginBottom: "15px",
+              borderRadius: "8px",
+            }}
+          >
+            <h3>Order #{order.id}</h3>
+
+            <p>
+              <strong>Date:</strong>{" "}
+              {new Date(order.date).toLocaleString()}
+            </p>
+
+            <p>
+              <strong>Total:</strong> ${order.total}
+            </p>
+
+            <h4>Items:</h4>
+
+            <ul>
+              {order.items.map((item: any, index: number) => (
+                <li key={index}>
+                  {item.name} - ${item.price}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      )}
     </main>
   );
 }
