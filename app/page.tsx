@@ -88,8 +88,8 @@ export default function Home() {
           style={{ padding: "8px" }}
         >
           <option value="all">All Categories</option>
-          <option value="electronics">Electronics</option>
-          <option value="clothing">Clothing</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Shoes">Shoes</option>
         </select>
       </div>
 
