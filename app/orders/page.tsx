@@ -4,9 +4,13 @@ import { useEffect, useState } from "react";
 
 type Order = {
   id: number;
-  items: any[];
   total: number;
   date: string;
+  items: {
+    id: number;
+    name: string;
+    price: number;
+  }[];
 };
 
 export default function OrdersPage() {
@@ -20,28 +24,37 @@ export default function OrdersPage() {
 
   return (
     <main style={{ padding: "20px" }}>
-      <h1>📦 Order History</h1>
+      <h1>📜 Purchase History</h1>
 
       {orders.length === 0 ? (
-        <p>No orders yet.</p>
+        <p>No orders found.</p>
       ) : (
         orders.map((order) => (
           <div
             key={order.id}
             style={{
               border: "1px solid #ccc",
-              marginBottom: "10px",
-              padding: "10px",
+              padding: "15px",
+              marginBottom: "15px",
+              borderRadius: "8px",
             }}
           >
-            <h3>Order #{order.id}</h3>
-            <p>Total: ${order.total}</p>
-            <p>Date: {new Date(order.date).toLocaleString()}</p>
+            <h2>Order #{order.id}</h2>
+
+            <p>
+              <strong>Date:</strong>{" "}
+              {new Date(order.date).toLocaleString()}
+            </p>
+
+            <p>
+              <strong>Total:</strong> ${order.total}
+            </p>
 
             <h4>Items:</h4>
+
             <ul>
-              {order.items.map((item, index) => (
-                <li key={index}>
+              {order.items.map((item) => (
+                <li key={item.id}>
                   {item.name} - ${item.price}
                 </li>
               ))}
