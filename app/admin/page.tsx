@@ -21,7 +21,7 @@ type Order = {
 };
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -37,10 +37,12 @@ export default function AdminPage() {
 
   // 🔐 PROTECT ADMIN ROUTE
   useEffect(() => {
+    if (loading) return;
+
     if (!user || user.role !== "admin") {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   // 📦 LOAD PRODUCTS + ORDERS
   const loadData = async () => {
@@ -92,6 +94,11 @@ export default function AdminPage() {
 
     loadData();
   };
+
+  // ⏳ LOADING STATE (IMPORTANT)
+  if (loading) {
+    return <p style={{ padding: "20px" }}>Loading admin panel...</p>;
+  }
 
   return (
     <main style={{ padding: "20px" }}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 type User = {
   username: string;
@@ -9,6 +9,7 @@ type User = {
 
 type AuthContextType = {
   user: User | null;
+  loading: boolean;
   login: (username: string, password: string) => boolean;
   logout: () => void;
 };
@@ -17,16 +18,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // 🧠 restore session from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+
+    setLoading(false);
+  }, []);
 
   const login = (username: string, password: string) => {
-    // fake authentication (assignment-friendly)
+    let newUser: User | null = null;
+
     if (username === "admin" && password === "admin") {
-      setUser({ username: "admin", role: "admin" });
-      return true;
+      newUser = { username: "admin", role: "admin" };
     }
 
     if (username === "user" && password === "user") {
-      setUser({ username: "user", role: "user" });
+      newUser = { username: "user", role: "user" };
+    }
+
+    if (newUser) {
+      setUser(newUser);
+      localStorage.setItem("user", JSON.stringify(newUser));
       return true;
     }
 
@@ -35,10 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem("user");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
