@@ -3,35 +3,56 @@ import { NextResponse } from "next/server";
 
 // GET all products
 export async function GET() {
-  const products = await prisma.product.findMany();
-  return NextResponse.json(products);
+  try {
+    const products = await prisma.product.findMany();
+    return NextResponse.json(products);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch products" },
+      { status: 500 }
+    );
+  }
 }
 
 // CREATE product
 export async function POST(req: Request) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  const product = await prisma.product.create({
-    data: {
-      name: body.name,
-      description: body.description,
-      price: Number(body.price),
-      category: body.category,
-      image: body.image,
-    },
-  });
+    const newProduct = await prisma.product.create({
+      data: {
+        name: body.name,
+        description: body.description,
+        price: Number(body.price),
+        category: body.category,
+        image: body.image,
+      },
+    });
 
-  return NextResponse.json(product);
+    return NextResponse.json(newProduct);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to create product" },
+      { status: 500 }
+    );
+  }
 }
 
 // DELETE product
 export async function DELETE(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const id = Number(searchParams.get("id"));
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = Number(searchParams.get("id"));
 
-  await prisma.product.delete({
-    where: { id },
-  });
+    await prisma.product.delete({
+      where: { id },
+    });
 
-  return NextResponse.json({ message: "Deleted successfully" });
+    return NextResponse.json({ message: "Deleted successfully" });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete product" },
+      { status: 500 }
+    );
+  }
 }
