@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
 type User = {
+  id: number;
   username: string;
   role: "user" | "admin";
 };
@@ -10,7 +11,7 @@ type User = {
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 };
 
@@ -20,40 +21,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🧠 restore session from localStorage
+  // load from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("user");
+    const storedUser = localStorage.getItem("user");
 
-    if (stored) {
-      setUser(JSON.parse(stored));
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
 
     setLoading(false);
   }, []);
 
-  const login = (username: string, password: string) => {
-    let newUser: User | null = null;
+  const login = async (username: string, password: string) => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-    if (username === "admin" && password === "admin") {
-      newUser = { username: "admin", role: "admin" };
-    }
+      if (!res.ok) return false;
 
-    if (username === "user" && password === "user") {
-      newUser = { username: "user", role: "user" };
-    }
+      const data = await res.json();
 
-    if (newUser) {
-      setUser(newUser);
-      localStorage.setItem("user", JSON.stringify(newUser));
+      setUser(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
+
       return true;
+    } catch {
+      return false;
     }
-
-    return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
   };
 
   return (
