@@ -15,6 +15,7 @@ type Product = {
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
@@ -22,10 +23,35 @@ export default function Home() {
   const { cart, addToCart } = useCart();
 
   useEffect(() => {
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .finally(() => setLoading(false));
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const res = await fetch("/api/products");
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch products");
+        }
+
+        const data = await res.json();
+
+        // safety check (VERY IMPORTANT for Vercel crashes)
+        if (!Array.isArray(data)) {
+          throw new Error("Invalid products response");
+        }
+
+        setProducts(data);
+      } catch (err: any) {
+        console.error("Product load error:", err);
+        setError("Unable to load products. Check API.");
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
   }, []);
 
   const totalValue = cart.reduce((sum, item) => sum + item.price, 0);
@@ -48,6 +74,13 @@ export default function Home() {
   return (
     <main style={{ padding: "20px" }}>
       <h1>🛍️ My B2C Store</h1>
+
+      {/* ERROR STATE */}
+      {error && (
+        <p style={{ color: "red", marginBottom: "10px" }}>
+          {error}
+        </p>
+      )}
 
       {/* CART SUMMARY */}
       <div style={{ marginBottom: "10px" }}>
@@ -94,51 +127,54 @@ export default function Home() {
       </div>
 
       {/* PRODUCTS */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-          gap: "20px",
-        }}
-      >
-        {filteredProducts.map((product) => (
-          <div
-            key={product.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: "15px",
-              borderRadius: "8px",
-              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-            }}
-          >
-            <img
-              src={product.image}
-              alt={product.name}
-              width="150"
+      {filteredProducts.length === 0 ? (
+        <p>No products found.</p>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+            gap: "20px",
+          }}
+        >
+          {filteredProducts.map((product) => (
+            <div
+              key={product.id}
               style={{
-                display: "block",
-                marginBottom: "10px",
+                border: "1px solid #ccc",
+                padding: "15px",
+                borderRadius: "8px",
+                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
               }}
-            />
+            >
+              <img
+                src={product.image}
+                alt={product.name}
+                width="150"
+                style={{
+                  display: "block",
+                  marginBottom: "10px",
+                }}
+              />
 
-            <h3>{product.name}</h3>
+              <h3>{product.name}</h3>
+              <p>{product.description}</p>
 
-            <p>{product.description}</p>
+              <p>
+                <strong>${product.price}</strong>
+              </p>
 
-            <p>
-              <strong>${product.price}</strong>
-            </p>
+              <p>
+                <small>Category: {product.category}</small>
+              </p>
 
-            <p>
-              <small>Category: {product.category}</small>
-            </p>
-
-            <button onClick={() => addToCart(product)}>
-              Add to Cart
-            </button>
-          </div>
-        ))}
-      </div>
+              <button onClick={() => addToCart(product)}>
+                Add to Cart
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </main>
   );
 }
