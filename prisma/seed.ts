@@ -1,8 +1,12 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // --------------------
+  // PRODUCTS
+  // --------------------
   await prisma.product.createMany({
     data: [
       {
@@ -28,12 +32,36 @@ async function main() {
       },
     ],
   });
+
+  // --------------------
+  // USERS (IMPORTANT)
+  // --------------------
+  const adminPassword = await bcrypt.hash("admin", 10);
+  const userPassword = await bcrypt.hash("user", 10);
+
+  await prisma.user.createMany({
+    data: [
+      {
+        username: "admin",
+        password: adminPassword,
+        role: "admin",
+      },
+      {
+        username: "user",
+        password: userPassword,
+        role: "user",
+      },
+    ],
+  });
+
+  console.log("✅ Seed complete: products + users created");
 }
 
 main()
-  .then(() => prisma.$disconnect())
-  .catch(async (e) => {
+  .catch((e) => {
     console.error(e);
-    await prisma.$disconnect();
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
