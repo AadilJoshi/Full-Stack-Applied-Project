@@ -7,8 +7,13 @@ export async function GET() {
     const products = await prisma.product.findMany();
     return NextResponse.json(products);
   } catch (error) {
+    console.error("Products API error:", error);
+
     return NextResponse.json(
-      { error: "Failed to fetch products" },
+      {
+        error: "Failed to fetch products",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
