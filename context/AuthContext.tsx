@@ -28,24 +28,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // ----------------------------
-  // LOAD FROM LOCALSTORAGE (FOR DEMO)
+  // LOAD FROM LOCALSTORAGE (SAFE PARSE)
   // ----------------------------
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    try {
+      const storedUser = localStorage.getItem("user");
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      if (storedUser) {
+        const parsed: User = JSON.parse(storedUser);
+        setUser(parsed);
+      }
+    } catch (err) {
+      console.error("Failed to parse user from localStorage:", err);
+      localStorage.removeItem("user");
     }
 
     setLoading(false);
   }, []);
 
   // ----------------------------
-  // FAKE LOGIN (NO API)
+  // FAKE LOGIN
   // ----------------------------
   const login = async (username: string, password: string) => {
     if (username === "admin" && password === "admin") {
-      const adminUser = {
+      const adminUser: User = {
         id: 1,
         username: "admin",
         role: "admin",
@@ -58,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (username === "user" && password === "user") {
-      const normalUser = {
+      const normalUser: User = {
         id: 2,
         username: "user",
         role: "user",
