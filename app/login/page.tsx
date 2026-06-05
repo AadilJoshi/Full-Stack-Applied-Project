@@ -12,15 +12,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = () => {
-    const success = login(username, password);
+  const handleLogin = async () => {
+  const success = await login(username, password);
 
-    if (success) {
-      router.push("/");
-    } else {
-      setError("Invalid credentials");
-    }
-  };
+  if (success) {
+    router.push("/");
+  } else {
+    setError("Invalid credentials");
+  }
+};
 
   return (
     <main style={{ padding: "20px" }}>
