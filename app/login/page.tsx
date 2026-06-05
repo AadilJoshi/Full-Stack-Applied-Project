@@ -11,25 +11,32 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-  const success = await login(username, password);
+    setLoading(true);
+    setError("");
 
-  if (success) {
-    router.push("/");
-  } else {
-    setError("Invalid credentials");
-  }
-};
+    const success = await login(username, password);
+
+    setLoading(false);
+
+    if (success) {
+      router.push("/");
+    } else {
+      setError("Invalid credentials. Try admin/admin or user/user");
+    }
+  };
 
   return (
-    <main style={{ padding: "20px" }}>
+    <main style={{ padding: "20px", maxWidth: "400px", margin: "auto" }}>
       <h1>Login</h1>
 
       <input
         placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
+        style={{ display: "block", marginBottom: "10px", width: "100%" }}
       />
 
       <input
@@ -37,15 +44,30 @@ export default function LoginPage() {
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        style={{ display: "block", marginBottom: "10px", width: "100%" }}
       />
 
-      <button onClick={handleLogin}>Login</button>
+      <button
+        onClick={handleLogin}
+        disabled={loading}
+        style={{
+          padding: "8px 12px",
+          cursor: "pointer",
+          width: "100%",
+        }}
+      >
+        {loading ? "Logging in..." : "Login"}
+      </button>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && (
+        <p style={{ color: "red", marginTop: "10px" }}>{error}</p>
+      )}
 
-      <p>Test accounts:</p>
-      <p>user / user</p>
-      <p>admin / admin</p>
+      <hr style={{ margin: "20px 0" }} />
+
+      <p><b>Test Accounts:</b></p>
+      <p>admin / admin → Admin Dashboard</p>
+      <p>user / user → Normal User</p>
     </main>
   );
 }

@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 
 type User = {
   id: number;
@@ -21,7 +27,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // load from localStorage
+  // ----------------------------
+  // LOAD FROM LOCALSTORAGE (FOR DEMO)
+  // ----------------------------
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
@@ -32,32 +40,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
+  // ----------------------------
+  // FAKE LOGIN (NO API)
+  // ----------------------------
   const login = async (username: string, password: string) => {
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+    if (username === "admin" && password === "admin") {
+      const adminUser = {
+        id: 1,
+        username: "admin",
+        role: "admin",
+      };
 
-      if (!res.ok) return false;
-
-      const data = await res.json();
-
-      setUser(data.user);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("token", data.token);
+      setUser(adminUser);
+      localStorage.setItem("user", JSON.stringify(adminUser));
 
       return true;
-    } catch {
-      return false;
     }
+
+    if (username === "user" && password === "user") {
+      const normalUser = {
+        id: 2,
+        username: "user",
+        role: "user",
+      };
+
+      setUser(normalUser);
+      localStorage.setItem("user", JSON.stringify(normalUser));
+
+      return true;
+    }
+
+    return false;
   };
 
+  // ----------------------------
+  // LOGOUT
+  // ----------------------------
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
-    localStorage.removeItem("token");
   };
 
   return (
@@ -67,8 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// ----------------------------
+// HOOK
+// ----------------------------
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used inside AuthProvider");
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
   return context;
 }

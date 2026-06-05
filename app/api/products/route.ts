@@ -7,11 +7,11 @@ export async function GET() {
   return NextResponse.json(products);
 }
 
-// CREATE product (admin)
+// CREATE product
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const newProduct = await prisma.product.create({
+  const product = await prisma.product.create({
     data: {
       name: body.name,
       description: body.description,
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json(newProduct);
+  return NextResponse.json(product);
 }
 
 // DELETE product

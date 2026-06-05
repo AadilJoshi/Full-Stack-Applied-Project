@@ -26,6 +26,7 @@ export default function AdminPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
   const [form, setForm] = useState({
     name: "",
@@ -35,34 +36,48 @@ export default function AdminPage() {
     image: "",
   });
 
-  // 🔐 PROTECT ADMIN ROUTE
+  // ----------------------------
+  // AUTH GUARD (FIXED)
+  // ----------------------------
   useEffect(() => {
     if (loading) return;
 
     if (!user || user.role !== "admin") {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [user, loading, router]);
 
-  // 📦 LOAD PRODUCTS + ORDERS
+  // ----------------------------
+  // LOAD DATA
+  // ----------------------------
   const loadData = async () => {
-    const [productsRes, ordersRes] = await Promise.all([
-      fetch("/api/products"),
-      fetch("/api/orders"),
-    ]);
+    setDataLoading(true);
 
-    const productsData = await productsRes.json();
-    const ordersData = await ordersRes.json();
+    try {
+      const [productsRes, ordersRes] = await Promise.all([
+        fetch("/api/products"),
+        fetch("/api/orders"),
+      ]);
 
-    setProducts(productsData);
-    setOrders(ordersData);
+      const productsData = await productsRes.json();
+      const ordersData = await ordersRes.json();
+
+      setProducts(productsData);
+      setOrders(ordersData);
+    } catch (err) {
+      console.error("Failed to load admin data:", err);
+    } finally {
+      setDataLoading(false);
+    }
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
-  // ➕ ADD PRODUCT
+  // ----------------------------
+  // ADD PRODUCT
+  // ----------------------------
   const addProduct = async () => {
     if (!form.name || !form.price) return;
 
@@ -86,7 +101,9 @@ export default function AdminPage() {
     loadData();
   };
 
-  // ❌ DELETE PRODUCT
+  // ----------------------------
+  // DELETE PRODUCT
+  // ----------------------------
   const deleteProduct = async (id: number) => {
     await fetch(`/api/products?id=${id}`, {
       method: "DELETE",
@@ -95,9 +112,18 @@ export default function AdminPage() {
     loadData();
   };
 
-  // ⏳ LOADING STATE (IMPORTANT)
-  if (loading) {
+  // ----------------------------
+  // LOADING STATES
+  // ----------------------------
+  if (loading || dataLoading) {
     return <p style={{ padding: "20px" }}>Loading admin panel...</p>;
+  }
+
+  // ----------------------------
+  // ACCESS BLOCK (extra safety)
+  // ----------------------------
+  if (!user || user.role !== "admin") {
+    return <p style={{ padding: "20px" }}>Access denied</p>;
   }
 
   return (
@@ -164,7 +190,7 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* PRODUCT LIST */}
+      {/* PRODUCTS */}
       <h2>Existing Products</h2>
 
       <div style={{ display: "grid", gap: "10px" }}>
@@ -202,7 +228,7 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {/* ORDERS SECTION */}
+      {/* ORDERS */}
       <hr style={{ margin: "40px 0" }} />
 
       <h2>📜 Purchase Records</h2>

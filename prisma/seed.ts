@@ -5,8 +5,11 @@ const prisma = new PrismaClient();
 
 async function main() {
   // --------------------
-  // PRODUCTS
+  // PRODUCTS (SAFE RESEED)
   // --------------------
+
+  await prisma.product.deleteMany();
+
   await prisma.product.createMany({
     data: [
       {
@@ -36,6 +39,7 @@ async function main() {
   // --------------------
   // USERS 
   // --------------------
+
   const adminPassword = await bcrypt.hash("admin", 10);
   const userPassword = await bcrypt.hash("user", 10);
 
@@ -44,7 +48,7 @@ async function main() {
     update: {},
     create: {
       username: "admin",
-      password: "adminPassword",
+      password: adminPassword,
       role: "admin",
     },
   });
@@ -59,7 +63,7 @@ async function main() {
     },
   });
 
-  console.log("✅ Seed complete: products + users created");
+  console.log("Seed complete: products + users created");
 }
 
 main()
