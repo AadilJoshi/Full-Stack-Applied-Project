@@ -34,24 +34,29 @@ async function main() {
   });
 
   // --------------------
-  // USERS (IMPORTANT)
+  // USERS 
   // --------------------
   const adminPassword = await bcrypt.hash("admin", 10);
   const userPassword = await bcrypt.hash("user", 10);
 
-  await prisma.user.createMany({
-    data: [
-      {
-        username: "admin",
-        password: adminPassword,
-        role: "admin",
-      },
-      {
-        username: "user",
-        password: userPassword,
-        role: "user",
-      },
-    ],
+  await prisma.user.upsert({
+    where: { username: "admin" },
+    update: {},
+    create: {
+      username: "admin",
+      password: "adminPassword",
+      role: "admin",
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { username: "user" },
+    update: {},
+    create: {
+      username: "user",
+      password: userPassword,
+      role: "user",
+    },
   });
 
   console.log("✅ Seed complete: products + users created");
